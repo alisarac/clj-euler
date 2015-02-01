@@ -1,24 +1,37 @@
 (ns euler.core)
 
-; problem 1
-(reduce + (filter #(or (= 0 (mod % 5))
-                       (= 0 (mod % 3)))
-                  (take 1000 (iterate inc 0))))
+;; problem 1
 
-; problem 2
-(defn fib []
+(defn solution-1 []
+  (reduce + (filter #(or (zero? (mod % 5))
+                         (zero? (mod % 3)))
+                    (take 1000 (iterate inc 0)))))
+
+
+;; problem 2
+
+(defn fib 
+  "Infinite lazy sequence of fibonacci numbers"
+  []
   (map first (iterate (fn [[a b]] [b (+ a b)]) [0N 1N])))
 
-(reduce + (filter even? (take-while #(< % 4000000) (fib))))
+(defn solution-2 [] 
+  (reduce + (filter even? (take-while #(< % 4000000) (fib)))))
 
-; problem 3
-(defn prime? [n]
-  (let [pred (fn [x] (= 0 (mod n x)))]
+
+;; problem 3
+
+(defn prime-nonoptimized? 
+  "Checking if number is prime by dividing every number"
+  [n]
+  (let [pred (fn [x] (zero? (mod n x)))]
     (not (some pred (range 2 n)))))
 
-(defn prime2? [n]
-  (if (= 2 n) true
-      (let [pred (fn [x] (= 0 (mod n x)))]
+(defn prime?
+  "Checking if number is prime by dividing till square root of number"
+  [n]
+  (if (= 2 n) true ; 2 is only even prime number, exceptional for the algoritm below
+      (let [pred (fn [x] (zero? (mod n x)))]
         (not (some pred (range 2 (+ 1 (Math/sqrt n))))))))
 
 (defn recursive-factors [n primes-in-range factorlist]
@@ -26,21 +39,24 @@
         next-primes (rest primes-in-range)]
     (cond
      (> first-prime n) factorlist
-     (= 0 (mod n first-prime)) (recur (/ n first-prime)
+     (zero? (mod n first-prime)) (recur (/ n first-prime)
                                       primes-in-range
                                       (conj factorlist first-prime))
      :else (recur n next-primes factorlist))))
 
 (defn prime-factors [n]
   (let [to-range n
-        primes (filter prime2? (range 2 to-range))]
+        primes (filter prime? (range 2 to-range))]
     (recursive-factors n primes [])))
 
+(defn solution-3 []
+  (last (prime-factors 600851475143)))
 
-; problem 4
+
+;; problem 4
+
 (defn palindrom? [x]
   (= (apply str ( reverse x)) x))
-
 
 (defn palindroms []
   (for [x (reverse (range 100 1000))
@@ -48,64 +64,88 @@
         :when (and (>= x y) (palindrom? (str (* x y))))]
     [x y]))
 
-(defn palindroms-result [all-palindroms]
+(defn solution-4 [all-palindroms]
   (apply max (map (fn [[x y]] (* x y)) all-palindroms)))
 
-; problem 5
+
+;; problem 5
+
 (defn smallest-multiple [divisors acc]
   (let [divider (first divisors)
         other (rest divisors)]
     (if divider 
       (recur
-       (rest (map #(if (= 0 (mod % divider)) (/ % divider) %) divisors))
+       (rest (map #(if (zero? (mod % divider)) (/ % divider) %) divisors))
        (conj acc divider))
       acc)))
 
-(apply * (smallest-multiple (range 2 21) []))
-
-;problem 6
-
-(let [sum-range (apply + (range 1 101))
-      sum-square (apply + (map #(* % %) (range 1 101)))]
-  (- (* sum-range sum-range) sum-square))
+(defn solution-5 [] 
+  (apply * (smallest-multiple (range 2 21) [])))
 
 
-; problem 7
-(take 1 (drop 10000 (for [x (iterate inc 2) :when (prime? x)] x )))
+;; problem 6
 
-; problem 8
+(defn solution-6 []
+  (let [sum-range (apply + (range 1 101))
+        sum-square (apply + (map #(* % %) (range 1 101)))]
+    (- (* sum-range sum-range) sum-square)))
+
+
+;; problem 7
+
+(defn solution-7 []
+  (take 1 (drop 10000 (for [x (iterate inc 2) :when (prime? x)] x ))))
+
+
+;; problem 8
+
 (def thousand-digit "7316717653133062491922511967442657474235534919493496983520312774506326239578318016984801869478851843858615607891129494954595017379583319528532088055111254069874715852386305071569329096329522744304355766896648950445244523161731856403098711121722383113622298934233803081353362766142828064444866452387493035890729629049156044077239071381051585930796086670172427121883998797908792274921901699720888093776657273330010533678812202354218097512545405947522435258490771167055601360483958644670632441572215539753697817977846174064955149290862569321978468622482839722413756570560574902614079729686524145351004748216637048440319989000889524345065854122758866688116427171479924442928230863465674813919123162824586178664583591245665294765456828489128831426076900422421902267105562632111110937054421750694165896040807198403850962455444362981230987879927244284909188845801561660979191338754992005240636899125607176060588611646710940507754100225698315520005593572972571636269561882670428252483600823257530420752963450")
 
 (defn divide5 [x y]
   (if (> 5 (count x)) y
       (recur (rest x) (conj y (map #(Integer/valueOf (str %)) (take 5 x))))))
 
-(apply max (map #(apply * %) (divide5 thousand-digit [])))
-
-; problem 9
-(for [a (range 1 1001)
-      b (range 1 1001)
-      c (range 1 1001)
-      :when (and (< a b c)
-                 (= (+ (* a a) (* b b)) (* c c))
-                 (= 1000 (+ a b c)))]
-  (* a b c))
-
-; problem 10
-(time (apply + (filter prime2? (range 2 2000000))))
+(defn solution-8 [] 
+  (apply max (map #(apply * %) (divide5 thousand-digit []))))
 
 
-; problem 12 -- not finished
+;; problem 9
+
+(defn solution-9 []
+  (for [a (range 1 1001)
+        b (range 1 1001)
+        c (range 1 1001)
+        :when (and (< a b c)
+                   (= (+ (* a a) (* b b)) (* c c))
+                   (= 1000 (+ a b c)))]
+    (* a b c)))
+
+
+;; problem 10
+
+(defn solution-10 []
+  (time (apply + (filter prime? (range 2 2000000)))))
+
+
+;; problem 12 
+;; TODO solve it
+
 (defn divisors [n]
-  (filter #(= 0 (mod n %)) (range 1 (+ n 1))))
+  (filter #(zero? (mod n %)) (range 1 (+ n 1))))
 
 (defn sum-till [n]
   (apply + (range 1 (inc n))))
 
-(time (take 1 (filter #(< 500 (count %)) (pmap divisors (pmap sum-till (iterate inc 1))))))
+(defn solution-12 
+  "Not returning a result in a reasonable time"
+  [] 
+  (time (take 1 (filter #(< 500 (count %)) 
+                        (map divisors (map sum-till (iterate inc 1)))))))
 
 
-;problem 13
+;; problem 13
+;; TODO better read numbers from a file
+
 (def numbers [37107287533902102798797998220837590246510135740250N
               46376937677490009712648124896970078050417018260538N
               74324986199524741059474233309513058123726617309629N
@@ -207,10 +247,13 @@
               20849603980134001723930671666823555245252804609722N
               53503534226472524250874054075591789781264330331690N])
 
-(apply str (take 10 (str (apply + numbers))))
+(defn solution-13 [] 
+  (apply str (take 10 (str (apply + numbers)))))
 
 
-; problem 25
-(count (take-while
-        #(> 1000 (count (str %)))
-        (fib)))
+;; problem 25
+
+(defn solution-25 [] 
+  (count (take-while
+          #(> 1000 (count (str %)))
+          (fib))))
